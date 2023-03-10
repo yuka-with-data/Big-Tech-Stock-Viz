@@ -1,0 +1,90 @@
+---
+title: "Big Tech Stock Prices"
+---
+
+## Objectives:
+
+To demonstrate the use of data visualization libraries and functions in R
+
+## Load Libraries
+
+```{r}
+library(tidytuesdayR)
+library(tidyverse) #ggplot2 package
+library(RColorBrewer)
+library(ggthemes)
+library(quantmod)
+library(forecast)
+library(lubridate)
+```
+
+## Load Data
+
+The data comes from Yahoo Finance via Kaggle.com ([Big Tech Stock Prices \| Kaggle](https://www.kaggle.com/datasets/evangower/big-tech-stock-prices)).
+
+```{r}
+tuesdata <- tidytuesdayR::tt_load('2023-02-07')
+stock_price <- tuesdata[["big_tech_stock_prices"]]
+companies_list <- tuesdata[["big_tech_companies"]]
+
+```
+
+## Visualization Examples:
+
+### Time Series
+
+Time series visualization is the graphical representation of data over time. It is useful to identify the trends and patterns, forecasting future values, detecting anomalies and outliers, and communicating insights and findings.
+
+#### Case Example: Tesla, Amazon and Netflix Stock Prices
+
+This code will visualize the stock price (closing price) fluctuations for these 3 companies. 2 vertical lines represent the day the Covid-19 Pandemic started, and the day Russia started the invasion of Ukraine.
+
+```{r}
+stock_price |> 
+    filter(stock_symbol %in% c("TSLA", "AMZN", "NFLX")) |> 
+    ggplot(aes(x = date, y = close, color = stock_symbol)) +
+    geom_line() + 
+    geom_vline(xintercept = as.Date("2020-03-13")) + #Covid
+    geom_vline(xintercept = as.Date("2022-02-24")) + #Russia-Ukraine
+    annotate("rect", xmin = as.Date("2020-01-01"), xmax = as.Date("2022-05-01"), ymin = 0, ymax = 700,
+             alpha = .7,fill = "grey") +
+    geom_text(x = as.Date("2020-03-13"), y = 625, label = "COVID-19", color = "red", angle = 90) +
+    geom_text(x = as.Date("2022-02-24"), y = 600, label = "Russia-Ukraine", color = "red", angle = 90) +
+    scale_color_brewer(palette = "Dark2") +
+    scale_color_manual(values = c("purple", "blue", "green"))
+```
+
+### Quantmod Package
+
+The Quantmod package for R is designed to assist the quantitative trader in the development, testing and deployment of statistically based trading models.
+
+[quantmod: Quantitative Financial Modelling Framework](https://www.quantmod.com/)
+
+#### Case Example:
+
+This code will retrieve Netflix stock data and plot a candlestick chart with MACD (Moving Average Convergence Divergence).
+
+```{r}
+# Load Netflix
+getSymbols("NFLX", src="yahoo")
+# Add the base Candlestick chart
+chartSeries(NFLX, subset="last 6 months", theme=chartTheme("white"))
+# add Moving Average Convergence Divergence (MACD)
+addMACD()
+```
+
+This code will retrieve NVIDIA stock data and plot a candlestick chart with RSI (Relative Strength Index).
+
+```{r}
+getSymbols("NVDA", src="yahoo")
+chartSeries(NVDA, subset="last 6 months", theme=chartTheme("white"))
+addRSI()
+```
+
+```{r}
+stock_price |> 
+  filter(stock_symbol %in% c("NFLX")) |> 
+  ggplot(aes(x = open, y = close)) +
+  geom_point(alpha = 0.3) 
+
+```
